@@ -12,6 +12,7 @@ def main():
         print("ERROR: OPENAI_API_KEY must be set and must start with 'sk-...'")
         sys.exit(1)
 
+    cumulative_cost = 0.0
     messages = []
     while True:
         try:
@@ -29,20 +30,25 @@ def main():
             max_tokens=1500,
         )
         print(resp.choices[0].message.content)
-        messages.append({"role": "assistant", "content": resp.choices[0].message.content})
+        messages.append(
+            {"role": "assistant", "content": resp.choices[0].message.content}
+        )
         print()
-        print("*******************************")
         print()
         print("Cost of that response:")
         print(
-            "  Tokens: Prompt={} Response={}, Total={}".format(
+            "  tokens: prompt={} response={}, total={}".format(
                 resp.usage.prompt_tokens,
                 resp.usage.completion_tokens,
                 resp.usage.total_tokens,
             )
         )
-        print("  Cost: ${:.6f}".format(resp.usage.total_tokens * cost_per_token))
+        cost = resp.usage.total_tokens * cost_per_token
+        cumulative_cost += cost
+        print("  cost: ${:.6f}".format(resp.usage.total_tokens * cost_per_token))
+        print("  cumulative cost: ${:.6f}".format(cumulative_cost))
         print()
+        print("*******************************")
 
 
 if __name__ == "__main__":
