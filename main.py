@@ -1,6 +1,7 @@
 import os
 import openai
 import sys
+import datetime
 
 # as of March 2023: https://openai.com/pricing
 cost_per_token = 0.002 / 1000
@@ -12,6 +13,8 @@ def main():
         print("ERROR: OPENAI_API_KEY must be set and must start with 'sk-...'")
         sys.exit(1)
 
+    welcome()
+    write_message_to_history("\n\nSTART {} UTC".format(datetime.datetime.utcnow()))
     cumulative_cost = 0.0
     messages = []
     while True:
@@ -22,20 +25,26 @@ def main():
 
         if user_input == "exit":
             return
+        if user_input == "":
+            continue
 
-        messages.append({"role": "user", "content": user_input})
+        msg = {"role": "user", "content": user_input}
+        write_message_to_history(msg)
+        messages.append(msg)
         resp = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=messages,
             max_tokens=1500,
         )
-        print(resp.choices[0].message.content)
-        messages.append(
-            {"role": "assistant", "content": resp.choices[0].message.content}
-        )
+        print("🤖:")
+        print()
+        print(resp.choices[0].message.content.strip())
+        msg = {"role": "assistant", "content": resp.choices[0].message.content}
+        write_message_to_history(msg)
+        messages.append(msg)
         print()
         print()
-        print("Cost of that response:")
+        print("💰:")
         print(
             "  tokens: prompt={} response={}, total={}".format(
                 resp.usage.prompt_tokens,
@@ -49,6 +58,21 @@ def main():
         print("  cumulative cost: ${:.6f}".format(cumulative_cost))
         print()
         print("*******************************")
+
+
+def write_message_to_history(m):
+    with open("/.chatgpt_history", "a") as f:
+        f.write("{}\n".format(m))
+
+
+def welcome():
+    print("Welcome to the ChatGPT command-line chatbot")
+    print("type 'exit' or use ctrl-C to exit.")
+    print()
+    print("version info:")
+    print("  openai library version: ", openai.version.VERSION)
+    print("  python version: ", sys.version)
+    print(flush=True)
 
 
 if __name__ == "__main__":
