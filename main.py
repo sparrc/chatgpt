@@ -66,8 +66,9 @@ def write_message_to_history(m):
 
 
 def welcome():
-    print("Welcome to the ChatGPT command-line chatbot")
-    print("type 'exit' or use ctrl-C to exit.")
+    print("Welcome to the ChatGPT command-line chatbot 🤖")
+    print("  enter your questions at the prompt.")
+    print("  type 'exit' or use ctrl-C to exit.")
     print()
     print("version info:")
     print("  openai library version: ", openai.version.VERSION)
