@@ -14,6 +14,7 @@ def main():
         sys.exit(1)
 
     welcome()
+    # write a timestamp for when this session began to history file:
     write_message_to_history("\n\nSTART {} UTC".format(datetime.datetime.utcnow()))
     cumulative_cost = 0.0
     messages = []
@@ -28,6 +29,7 @@ def main():
         if user_input == "":
             continue
 
+        # make a "user" content message to pass to openai chat completion API
         msg = {"role": "user", "content": user_input}
         write_message_to_history(msg)
         messages.append(msg)
@@ -39,24 +41,14 @@ def main():
         print("🤖:")
         print()
         print(resp.choices[0].message.content.strip())
+        # response from openai is an "assistant" content message to be passed on the next prompt
         msg = {"role": "assistant", "content": resp.choices[0].message.content}
         write_message_to_history(msg)
         messages.append(msg)
-        print()
-        print()
-        print("💰:")
-        print(
-            "  tokens: prompt={} response={}, total={}".format(
-                resp.usage.prompt_tokens,
-                resp.usage.completion_tokens,
-                resp.usage.total_tokens,
-            )
+        # calculate and print token and dollar cost
+        cumulative_cost = cost(
+            resp.usage.prompt_tokens, resp.usage.completion_tokens, cumulative_cost
         )
-        cost = resp.usage.total_tokens * cost_per_token
-        cumulative_cost += cost
-        print("  cost: ${:.6f}".format(resp.usage.total_tokens * cost_per_token))
-        print("  cumulative cost: ${:.6f}".format(cumulative_cost))
-        print()
         print("*******************************")
 
 
@@ -74,6 +66,26 @@ def welcome():
     print("  openai library version: ", openai.version.VERSION)
     print("  python version: ", sys.version)
     print(flush=True)
+
+
+def cost(prompt_tokens, completion_tokens, cumulative_cost):
+    total_tokens = prompt_tokens + completion_tokens
+    print()
+    print()
+    print("💰:")
+    print(
+        "  tokens: prompt={} response={}, total={}".format(
+            prompt_tokens,
+            completion_tokens,
+            total_tokens,
+        )
+    )
+    cost = total_tokens * cost_per_token
+    cumulative_cost += cost
+    print("  cost: ${:.6f}".format(cost))
+    print("  cumulative cost: ${:.6f}".format(cumulative_cost))
+    print()
+    return cumulative_cost
 
 
 if __name__ == "__main__":
