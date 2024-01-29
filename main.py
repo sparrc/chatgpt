@@ -9,7 +9,7 @@ from openai import OpenAI
 # using gpt-4-turbo model
 cost_per_input_token = 0.01 / 1000
 cost_per_output_token = 0.03 / 1000
-model = "gpt-4-1106-preview"
+model = "gpt-4-turbo-preview"
 
 
 def main():
