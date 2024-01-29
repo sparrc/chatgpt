@@ -1,10 +1,15 @@
 import os
-import openai
 import sys
 import datetime
 
-# as of March 2023: https://openai.com/pricing
-cost_per_token = 0.002 / 1000
+import openai
+from openai import OpenAI
+
+# as of Jan 2024: https://openai.com/pricing
+# using gpt-4-turbo model
+cost_per_input_token = 0.01 / 1000
+cost_per_output_token = 0.03 / 1000
+model = "gpt-4-1106-preview"
 
 
 def main():
@@ -13,10 +18,14 @@ def main():
         print("ERROR: OPENAI_API_KEY must be set and must start with 'sk-...'")
         sys.exit(1)
 
+    client = OpenAI(
+        api_key=token,
+    )
     welcome()
     # write a timestamp for when this session began to history file:
-    write_message_to_history("\n\nSTART {} UTC".format(datetime.datetime.utcnow()))
+    write_message_to_history("\n\nSTART {} UTC".format(datetime.datetime.now(datetime.UTC)))
     cumulative_cost = 0.0
+    prev_tokens = 0
     messages = []
     while True:
         try:
@@ -33,10 +42,10 @@ def main():
         msg = {"role": "user", "content": user_input}
         write_message_to_history(msg)
         messages.append(msg)
-        resp = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+        resp = client.chat.completions.create(
+            model=model,
             messages=messages,
-            max_tokens=1500,
+            max_tokens=4050-prev_tokens,
         )
         print("🤖:")
         print()
@@ -49,6 +58,7 @@ def main():
         cumulative_cost = cost(
             resp.usage.prompt_tokens, resp.usage.completion_tokens, cumulative_cost
         )
+        prev_tokens = resp.usage.prompt_tokens + resp.usage.completion_tokens
         print("*******************************")
 
 
@@ -80,7 +90,8 @@ def cost(prompt_tokens, completion_tokens, cumulative_cost):
             total_tokens,
         )
     )
-    cost = total_tokens * cost_per_token
+    cost = prompt_tokens * cost_per_input_token
+    cost += completion_tokens * cost_per_output_token
     cumulative_cost += cost
     print("  cost: ${:.6f}".format(cost))
     print("  cumulative cost: ${:.6f}".format(cumulative_cost))
