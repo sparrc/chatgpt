@@ -73,7 +73,8 @@ def welcome():
     print("  type 'exit' or use ctrl-C to exit.")
     print()
     print("version info:")
-    print("  openai library version: ", openai.version.VERSION)
+    print("  openai chat model: ", model)
+    print("  openai python library version: ", openai.version.VERSION)
     print("  python version: ", sys.version)
     print(flush=True)
 
