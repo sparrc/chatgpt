@@ -28,19 +28,34 @@ def main():
     prev_tokens = 0
     messages = []
     while True:
-        try:
-            user_input = input("--> ").strip()
-        except KeyboardInterrupt:
-            return
+        print("Enter you query below, two blank lines is interpreted as end of input.")
+        contents = []
+        while True:
+            try:
+                line = input()
+            except EOFError:
+                break
+            except KeyboardInterrupt:
+                return
+            if line.strip() == "":
+                if len(contents) > 0 and contents[len(contents)-1].strip() == "":
+                    # two blank lines
+                    break
+            if line.strip() == "exit":
+                break
+            contents.append(line)
 
-        if user_input == "exit":
+        user_input = "\n".join(contents)
+
+        if user_input.strip() == "exit":
             return
-        if user_input == "":
+        if user_input.strip() == "":
             continue
 
         # make a "user" content message to pass to openai chat completion API
         msg = {"role": "user", "content": user_input}
         write_message_to_history(msg)
+        print("Submitting to OpenAI, please wait...", flush=True)
         messages.append(msg)
         resp = client.chat.completions.create(
             model=model,
