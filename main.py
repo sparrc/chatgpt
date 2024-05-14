@@ -5,11 +5,10 @@ import datetime
 import openai
 from openai import OpenAI
 
-# as of Jan 2024: https://openai.com/pricing
-# using gpt-4-turbo model
-cost_per_input_token = 0.01 / 1000
-cost_per_output_token = 0.03 / 1000
-model = "gpt-4-turbo-preview"
+# As of May 2024: https://openai.com/pricing
+cost_per_input_token = 5.00 / 1000000
+cost_per_output_token = 15.00 / 1000000
+model = "gpt-4o"
 
 
 def main():
