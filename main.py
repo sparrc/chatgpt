@@ -5,10 +5,7 @@ import datetime
 import openai
 from openai import OpenAI
 
-# As of May 2024: https://openai.com/pricing
-cost_per_input_token = 5.00 / 1000000
-cost_per_output_token = 15.00 / 1000000
-model = "gpt-4o"
+model = "gpt-4o-mini"
 
 
 def main():
@@ -22,7 +19,9 @@ def main():
     )
     welcome()
     # write a timestamp for when this session began to history file:
-    write_message_to_history("\n\nSTART {} UTC".format(datetime.datetime.now(datetime.UTC)))
+    write_message_to_history(
+        "\n\nSTART {} UTC".format(datetime.datetime.now(datetime.UTC))
+    )
     cumulative_cost = 0.0
     prev_tokens = 0
     messages = []
@@ -37,7 +36,7 @@ def main():
             except KeyboardInterrupt:
                 return
             if line.strip() == "":
-                if len(contents) > 0 and contents[len(contents)-1].strip() == "":
+                if len(contents) > 0 and contents[len(contents) - 1].strip() == "":
                     # two blank lines
                     break
             if line.strip() == "exit":
@@ -59,7 +58,7 @@ def main():
         resp = client.chat.completions.create(
             model=model,
             messages=messages,
-            max_tokens=4050-prev_tokens,
+            max_tokens=4050 - prev_tokens,
         )
         print("🤖:")
         print()
@@ -105,6 +104,7 @@ def cost(prompt_tokens, completion_tokens, cumulative_cost):
             total_tokens,
         )
     )
+    cost_per_input_token, cost_per_output_token = get_pricing(model)
     cost = prompt_tokens * cost_per_input_token
     cost += completion_tokens * cost_per_output_token
     cumulative_cost += cost
@@ -112,6 +112,29 @@ def cost(prompt_tokens, completion_tokens, cumulative_cost):
     print("  cumulative cost: ${:.6f}".format(cumulative_cost))
     print()
     return cumulative_cost
+
+
+# As of Sept 2024: https://openai.com/pricing
+def get_pricing(model_name):
+    costs = {
+        "gpt-4o": {
+            "input_cost": 5.00 / 1000000,
+            "output_cost": 15.00 / 1000000,
+        },
+        "gpt-4o-mini": {
+            "input_cost": 0.15 / 1000000,
+            "output_cost": 0.6 / 1000000,
+        },
+        "o1-mini": {
+            "input_cost": 3.00 / 1000000,
+            "output_cost": 12.00 / 1000000,
+        },
+    }
+
+    if model_name in costs:
+        return costs[model_name]["input_cost"], costs[model_name]["output_cost"]
+    else:
+        raise ValueError(f"Model {model_name} not found.")
 
 
 if __name__ == "__main__":
