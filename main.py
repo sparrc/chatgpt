@@ -7,7 +7,6 @@ from openai import OpenAI
 
 model = "gpt-4o-mini"
 
-
 def main():
     token = os.getenv("OPENAI_API_KEY")
     if token == None or not token.startswith("sk-"):
@@ -58,7 +57,7 @@ def main():
         resp = client.chat.completions.create(
             model=model,
             messages=messages,
-            max_tokens=4050 - prev_tokens,
+            max_tokens=4050 + prev_tokens,
         )
         print("🤖:")
         print()
@@ -114,7 +113,7 @@ def cost(prompt_tokens, completion_tokens, cumulative_cost):
     return cumulative_cost
 
 
-# As of Sept 2024: https://openai.com/pricing
+# As of Feb 2025: https://platform.openai.com/docs/pricing
 def get_pricing(model_name):
     costs = {
         "gpt-4o": {
@@ -126,8 +125,12 @@ def get_pricing(model_name):
             "output_cost": 0.6 / 1000000,
         },
         "o1-mini": {
-            "input_cost": 3.00 / 1000000,
-            "output_cost": 12.00 / 1000000,
+            "input_cost": 1.10 / 1000000,
+            "output_cost": 4.40 / 1000000,
+        },
+        "o3-mini": {
+            "input_cost": 1.10 / 1000000,
+            "output_cost": 4.40 / 1000000,
         },
     }
 
