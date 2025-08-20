@@ -5,7 +5,7 @@ import datetime
 import openai
 from openai import OpenAI
 
-model = "gpt-4o-mini"
+DEFAULT_MODEL = "gpt-4.1-mini"
 
 def main():
     token = os.getenv("OPENAI_API_KEY")
@@ -13,10 +13,14 @@ def main():
         print("ERROR: OPENAI_API_KEY must be set and must start with 'sk-...'")
         sys.exit(1)
 
+    model = os.getenv("OPENAI_MODEL")
+    if model == None or len(model) == 0:
+        model = DEFAULT_MODEL
+
     client = OpenAI(
         api_key=token,
     )
-    welcome()
+    welcome(model)
     # write a timestamp for when this session began to history file:
     write_message_to_history(
         "\n\nSTART {} UTC".format(datetime.datetime.now(datetime.UTC))
@@ -57,7 +61,7 @@ def main():
         resp = client.chat.completions.create(
             model=model,
             messages=messages,
-            max_tokens=4050 + prev_tokens,
+            #max_tokens=4050 + prev_tokens,
         )
         print("🤖:")
         print()
@@ -68,7 +72,7 @@ def main():
         messages.append(msg)
         # calculate and print token and dollar cost
         cumulative_cost = cost(
-            resp.usage.prompt_tokens, resp.usage.completion_tokens, cumulative_cost
+            resp.usage.prompt_tokens, resp.usage.completion_tokens, cumulative_cost, model
         )
         prev_tokens = resp.usage.prompt_tokens + resp.usage.completion_tokens
         print("*******************************")
@@ -79,7 +83,7 @@ def write_message_to_history(m):
         f.write("{}\n".format(m))
 
 
-def welcome():
+def welcome(model):
     print("Welcome to the ChatGPT command-line chatbot 🤖")
     print("  enter your questions at the prompt.")
     print("  type 'exit' or use ctrl-C to exit.")
@@ -91,7 +95,7 @@ def welcome():
     print(flush=True)
 
 
-def cost(prompt_tokens, completion_tokens, cumulative_cost):
+def cost(prompt_tokens, completion_tokens, cumulative_cost, model):
     total_tokens = prompt_tokens + completion_tokens
     print()
     print()
@@ -113,7 +117,7 @@ def cost(prompt_tokens, completion_tokens, cumulative_cost):
     return cumulative_cost
 
 
-# As of Feb 2025: https://platform.openai.com/docs/pricing
+# As of Aug 2025: https://platform.openai.com/docs/pricing
 def get_pricing(model_name):
     costs = {
         "gpt-4o": {
@@ -123,6 +127,26 @@ def get_pricing(model_name):
         "gpt-4o-mini": {
             "input_cost": 0.15 / 1000000,
             "output_cost": 0.6 / 1000000,
+        },
+        "gpt-4.1": {
+            "input_cost": 2.0 / 1000000,
+            "output_cost": 8.0 / 1000000,
+        },
+        "gpt-4.1-mini": {
+            "input_cost": 0.40 / 1000000,
+            "output_cost": 1.6 / 1000000,
+        },
+        "gpt-4.1-nano": {
+            "input_cost": 0.1 / 1000000,
+            "output_cost": 0.4 / 1000000,
+        },
+        "gpt-5-nano": {
+            "input_cost": 0.05 / 1000000,
+            "output_cost": 0.4 / 1000000,
+        },
+        "gpt-5-mini": {
+            "input_cost": 0.25 / 1000000,
+            "output_cost": 2.0 / 1000000,
         },
         "o1-mini": {
             "input_cost": 1.10 / 1000000,
@@ -137,7 +161,8 @@ def get_pricing(model_name):
     if model_name in costs:
         return costs[model_name]["input_cost"], costs[model_name]["output_cost"]
     else:
-        raise ValueError(f"Model {model_name} not found.")
+        print("Cost not available: model {model_name} not found.")
+        return 0.0, 0.0
 
 
 if __name__ == "__main__":

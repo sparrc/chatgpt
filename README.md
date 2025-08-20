@@ -16,5 +16,5 @@ docker run --interactive --env OPENAI_API_KEY=sk-XXXXX chatgpt
 
 ```
 touch "$HOME/.chatgpt_history"
-docker run --name chatgpt --rm --mount type=bind,source="$HOME/.chatgpt_history",target="/.chatgpt_history" --interactive --env "OPENAI_API_KEY=$OPENAI_API_KEY" chatgpt
+docker run --name chatgpt --rm --mount type=bind,source="$HOME/.chatgpt_history",target="/.chatgpt_history" --interactive --env "OPENAI_API_KEY=$OPENAI_API_KEY" --env "OPENAI_MODEL=$OPENAI_MODEL" chatgpt
 ```
